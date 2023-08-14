@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:multi_vendor_admin/views/screens/sidebar_screens/widgets/banner_widget.dart';
 import 'package:multi_vendor_admin/widget_setting/color_collections.dart';
 
 class UploadBannerScreen extends StatefulWidget {
@@ -15,7 +18,7 @@ class _UploadBannerScreenState extends State<UploadBannerScreen> {
   dynamic _image;
   String? fileName;
 
-  pickImage() async {
+  _pickImage() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       allowMultiple: false,
       type: FileType.image,
@@ -41,12 +44,46 @@ class _UploadBannerScreenState extends State<UploadBannerScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   uploadToFirestore() async {
-    if (_image != null) {
+    if (_image == null) {
+      Fluttertoast.showToast(
+          msg: 'Please Select Image First',
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 2,
+          backgroundColor: Colors.white,
+          textColor: Colors.red,
+          fontSize: 16.0);
+      return;
+    }
+
+    EasyLoading.show();
+
+    try {
       String imageUrl = await _uploadBannersToStorage(_image);
+
       await _firestore
           .collection('banners')
           .doc(fileName)
           .set({'image': imageUrl});
+
+      setState(() {
+        Fluttertoast.showToast(
+            msg: "Image uploaded successfully!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP,
+            backgroundColor: Colors.yellow,
+            textColor: Colors.green);
+        _image = null;
+      });
+    } catch (error) {
+      Fluttertoast.showToast(
+          msg: 'An error occurred: $error',
+          gravity: ToastGravity.TOP,
+          timeInSecForIosWeb: 2,
+          backgroundColor: Colors.white,
+          textColor: Colors.red,
+          fontSize: 16.0);
+    } finally {
+      EasyLoading.dismiss();
     }
   }
 
@@ -66,56 +103,76 @@ class _UploadBannerScreenState extends State<UploadBannerScreen> {
               ),
             ),
           ),
+          Divider(
+            color: iconClr,
+            height: 2,
+          ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      height: 140,
-                      width: 400,
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        border: Border.all(color: iconClr, width: 2),
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: _image != null
-                          ? Image.memory(
-                              _image,
-                              fit: BoxFit.cover,
-                            )
-                          : Center(child: Text('Upload Banner')),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                  ],
+                Container(
+                  height: 140,
+                  width: 400,
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    border: Border.all(color: iconClr, width: 2),
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                  child: _image != null
+                      ? Image.memory(
+                          _image,
+                          fit: BoxFit.cover,
+                        )
+                      : Center(child: Text('Upload Banner')),
                 ),
                 SizedBox(
                   height: 10,
                 ),
-                Row(
-                  children: [
-                    ElevatedButton(
-                        onPressed: () {
-                          pickImage();
-                        },
-                        child: Text('Upload Banner')),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    ElevatedButton(
-                        onPressed: () {
-                          uploadToFirestore();
-                        },
-                        child: Text('Save ')),
-                  ],
+                SizedBox(
+                  width: 400,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                          onPressed: () {
+                            _pickImage();
+                          },
+                          child: Text('Upload Banner')),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      ElevatedButton(
+                          onPressed: () {
+                            uploadToFirestore();
+                          },
+                          child: Text('Save ')),
+                    ],
+                  ),
                 )
               ],
             ),
-          )
+          ),
+          Divider(
+            color: iconClr,
+            height: 2,
+          ),
+          Container(
+            alignment: Alignment.topLeft,
+            padding: const EdgeInsets.all(10),
+            child: const Text(
+              'Existing Categories',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 26,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: AdminBannerWidget(),
+          ),
         ],
       ),
     );

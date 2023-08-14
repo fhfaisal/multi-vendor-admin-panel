@@ -74,11 +74,12 @@ class _MainScreenState extends State<MainScreen> {
         backgroundColor: scaffoldBgClr,
         appBar: AppBar(
           backgroundColor: appbarColor,
-          centerTitle: true,
-          title: Text(
-            'Admin Panel'.toUpperCase(),
-            style: TextStyle(color: Colors.white),
-          ),
+          // toolbarTextStyle: TextStyle(color: Colors.white),
+          // centerTitle: true,
+          // title: Text(
+          //   'Admin Panel'.toUpperCase(),
+          //   style: TextStyle(color: Colors.white),
+          // ),
         ),
         sideBar: SideBar(
           iconColor: iconClr,
